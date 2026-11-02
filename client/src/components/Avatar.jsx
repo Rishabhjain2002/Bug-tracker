@@ -1,7 +1,7 @@
-const COLORS = ['#0c66e4', '#1f845a', '#e2483d', '#6e5dc6', '#d97008', '#1d7f8c'];
+import { colorFor } from '../constants';
 
 // Round initials badge for a user; shows "?" when nobody is assigned
-export default function Avatar({ id, name, size = 'md' }) {
+export default function Avatar({ id, name, color, size = 'md' }) {
   if (!name) {
     return <span className={`avatar avatar-${size} avatar-empty`} title="Unassigned">?</span>;
   }
@@ -14,7 +14,7 @@ export default function Avatar({ id, name, size = 'md' }) {
     .toUpperCase();
 
   return (
-    <span className={`avatar avatar-${size}`} style={{ background: COLORS[id % COLORS.length] }} title={name}>
+    <span className={`avatar avatar-${size}`} style={{ background: colorFor({ id, color }) }} title={name}>
       {initials}
     </span>
   );

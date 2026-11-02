@@ -10,7 +10,7 @@ import TicketFilters from '../components/TicketFilters';
 import BoardColumn from '../components/BoardColumn';
 import TicketModal from '../components/TicketModal';
 
-const EMPTY_FILTERS = { search: '', project_id: '', priority: '', assignee_id: '' };
+const EMPTY_FILTERS = { search: '', project_id: '', priority: '', assignee_id: '', label_id: '' };
 
 export default function Board() {
   const { user } = useAuth();
@@ -18,6 +18,7 @@ export default function Board() {
   const [tickets, setTickets] = useState([]);
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
+  const [labels, setLabels] = useState([]);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [loading, setLoading] = useState(true);
   // null = closed, { ticket } = open a ticket, { status } = create a ticket in that column
@@ -25,10 +26,11 @@ export default function Board() {
 
   // Options for the filters and the ticket form
   useEffect(() => {
-    Promise.all([api.get('/projects'), api.get('/users')])
-      .then(([projectsRes, usersRes]) => {
+    Promise.all([api.get('/projects'), api.get('/users'), api.get('/labels')])
+      .then(([projectsRes, usersRes, labelsRes]) => {
         setProjects(projectsRes.data);
         setUsers(usersRes.data);
+        setLabels(labelsRes.data);
       })
       .catch((err) => showToast(getErrorMessage(err), 'error'));
   }, [showToast]);
@@ -96,6 +98,7 @@ export default function Board() {
         onClear={() => setFilters(EMPTY_FILTERS)}
         projects={projects}
         users={users}
+        labels={labels}
       />
 
       <div className="board">
@@ -120,6 +123,7 @@ export default function Board() {
           defaultStatus={modal.status}
           projects={projects}
           users={users}
+          labels={labels}
           onClose={() => setModal(null)}
           onSaved={handleSaved}
           onDeleted={handleDeleted}

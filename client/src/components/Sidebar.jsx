@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Bug, FolderKanban, LogOut, SquareKanban, Users } from 'lucide-react';
+import { Bug, FolderKanban, LogOut, SquareKanban, Tags, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Avatar from './Avatar';
 
@@ -17,11 +17,12 @@ export default function Sidebar() {
       <nav className="side-nav">
         <NavLink to="/" end><SquareKanban size={18} /> Board</NavLink>
         <NavLink to="/projects"><FolderKanban size={18} /> Projects</NavLink>
-        {user.role === 'admin' && <NavLink to="/users"><Users size={18} /> Users</NavLink>}
+        <NavLink to="/team"><Users size={18} /> Team</NavLink>
+        <NavLink to="/labels"><Tags size={18} /> Labels</NavLink>
       </nav>
 
       <div className="side-user">
-        <Avatar id={user.id} name={user.name} />
+        <Avatar id={user.id} name={user.name} color={user.color} />
         <div className="side-user-info">
           <span className="side-user-name">{user.name}</span>
           <span className="muted small">{user.role === 'admin' ? 'Admin' : 'Member'}</span>

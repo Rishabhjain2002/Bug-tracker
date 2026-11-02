@@ -4,9 +4,15 @@ const httpError = require('../utils/httpError');
 const STATUSES = ['open', 'in_progress', 'resolved', 'closed'];
 const PRIORITIES = ['low', 'medium', 'high'];
 
-// Tickets are always returned with their project, assignee and reporter names
+// Tickets are always returned with their project, assignee and reporter names and their labels
 const TICKET_QUERY = `
-  SELECT t.*, p.name AS project_name, a.name AS assignee_name, r.name AS reporter_name
+  SELECT t.*, p.name AS project_name, a.name AS assignee_name, a.color AS assignee_color, r.name AS reporter_name,
+    COALESCE(
+      (SELECT json_agg(json_build_object('id', l.id, 'name', l.name, 'color', l.color) ORDER BY l.name)
+       FROM ticket_labels tl JOIN labels l ON l.id = tl.label_id
+       WHERE tl.ticket_id = t.id),
+      '[]'
+    ) AS labels
   FROM tickets t
   JOIN projects p ON p.id = t.project_id
   LEFT JOIN users a ON a.id = t.assignee_id
@@ -30,11 +36,44 @@ function parseTicketBody(body) {
   return [title.trim(), description || null, status, priority, project_id, assignee_id || null];
 }
 
+// Returns the label ids to save, or null when the body has none (the labels are left unchanged)
+function parseLabelIds(body) {
+  const { label_ids } = body;
+  if (label_ids === undefined) return null;
+  if (!Array.isArray(label_ids)) throw httpError(400, 'label_ids must be an array');
+  return [...new Set(label_ids.map(Number))];
+}
+
+async function saveLabels(client, ticketId, labelIds) {
+  if (!labelIds) return;
+  await client.query('DELETE FROM ticket_labels WHERE ticket_id = $1', [ticketId]);
+  await client.query(
+    'INSERT INTO ticket_labels (ticket_id, label_id) SELECT $1, unnest($2::int[])',
+    [ticketId, labelIds]
+  );
+}
+
+// Runs fn(client) in a transaction, so a bad label id does not leave a half-saved ticket
+async function inTransaction(fn) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 const isAdmin = (user) => user.role === 'admin';
 
-// GET /api/tickets?search=&status=&priority=&project_id=&assignee_id=
+// GET /api/tickets?search=&status=&priority=&project_id=&assignee_id=&label_id=
 async function listTickets(req, res) {
-  const { search, status, priority, project_id, assignee_id } = req.query;
+  const { search, status, priority, project_id, assignee_id, label_id } = req.query;
   const conditions = [];
   const values = [];
 
@@ -52,6 +91,9 @@ async function listTickets(req, res) {
   if (priority) conditions.push(`t.priority = ${param(priority)}`);
   if (project_id) conditions.push(`t.project_id = ${param(project_id)}`);
   if (assignee_id) conditions.push(`t.assignee_id = ${param(assignee_id)}`);
+  if (label_id) {
+    conditions.push(`EXISTS (SELECT 1 FROM ticket_labels tl WHERE tl.ticket_id = t.id AND tl.label_id = ${param(label_id)})`);
+  }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const { rows } = await pool.query(`${TICKET_QUERY} ${where} ORDER BY t.updated_at DESC`, values);
@@ -66,13 +108,18 @@ async function getTicket(req, res) {
 // POST /api/tickets
 async function createTicket(req, res) {
   const values = parseTicketBody(req.body);
+  const labelIds = parseLabelIds(req.body);
 
-  const { rows } = await pool.query(
-    `INSERT INTO tickets (title, description, status, priority, project_id, assignee_id, reporter_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-    [...values, req.user.id]
-  );
-  res.status(201).json(await findTicket(rows[0].id));
+  const ticketId = await inTransaction(async (client) => {
+    const { rows } = await client.query(
+      `INSERT INTO tickets (title, description, status, priority, project_id, assignee_id, reporter_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+      [...values, req.user.id]
+    );
+    await saveLabels(client, rows[0].id, labelIds);
+    return rows[0].id;
+  });
+  res.status(201).json(await findTicket(ticketId));
 }
 
 // PUT /api/tickets/:id - admin, reporter or assignee
@@ -82,12 +129,16 @@ async function updateTicket(req, res) {
   if (!canEdit) throw httpError(403, 'Only an admin, the reporter or the assignee can edit this ticket');
 
   const values = parseTicketBody(req.body);
-  await pool.query(
-    `UPDATE tickets
-     SET title = $1, description = $2, status = $3, priority = $4, project_id = $5, assignee_id = $6, updated_at = NOW()
-     WHERE id = $7`,
-    [...values, ticket.id]
-  );
+  const labelIds = parseLabelIds(req.body);
+  await inTransaction(async (client) => {
+    await client.query(
+      `UPDATE tickets
+       SET title = $1, description = $2, status = $3, priority = $4, project_id = $5, assignee_id = $6, updated_at = NOW()
+       WHERE id = $7`,
+      [...values, ticket.id]
+    );
+    await saveLabels(client, ticket.id, labelIds);
+  });
   res.json(await findTicket(ticket.id));
 }
 

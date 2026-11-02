@@ -7,7 +7,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Board from './pages/Board';
 import Projects from './pages/Projects';
-import Users from './pages/Users';
+import Team from './pages/Team';
+import Labels from './pages/Labels';
 
 export default function App() {
   return (
@@ -22,7 +23,9 @@ export default function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/" element={<ProtectedRoute><Board /></ProtectedRoute>} />
                 <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-                <Route path="/users" element={<ProtectedRoute adminOnly><Users /></ProtectedRoute>} />
+                <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+                <Route path="/labels" element={<ProtectedRoute><Labels /></ProtectedRoute>} />
+                <Route path="/users" element={<Navigate to="/team" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>

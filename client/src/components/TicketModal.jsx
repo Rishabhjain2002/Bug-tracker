@@ -16,10 +16,11 @@ const toFormValues = (ticket) => ({
   assignee_id: ticket.assignee_id || '',
   priority: ticket.priority,
   status: ticket.status,
+  label_ids: ticket.labels.map((l) => l.id),
 });
 
 // Creates a ticket when `ticket` is null, otherwise edits it (or shows it read-only)
-export default function TicketModal({ ticket, defaultStatus = 'open', projects, users, onClose, onSaved, onDeleted }) {
+export default function TicketModal({ ticket, defaultStatus = 'open', projects, users, labels, onClose, onSaved, onDeleted }) {
   const { user } = useAuth();
   const showToast = useToast();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -28,7 +29,7 @@ export default function TicketModal({ ticket, defaultStatus = 'open', projects, 
   const canEdit = isNew || canEditTicket(user, ticket);
 
   const initialValues = isNew
-    ? { title: '', description: '', project_id: projects[0]?.id || '', assignee_id: '', priority: 'medium', status: defaultStatus }
+    ? { title: '', description: '', project_id: projects[0]?.id || '', assignee_id: '', priority: 'medium', status: defaultStatus, label_ids: [] }
     : toFormValues(ticket);
 
   const handleSubmit = async (values) => {
@@ -79,6 +80,7 @@ export default function TicketModal({ ticket, defaultStatus = 'open', projects, 
           initialValues={initialValues}
           projects={projects}
           users={users}
+          labels={labels}
           onSubmit={handleSubmit}
           onCancel={onClose}
           submitLabel={isNew ? 'Create' : 'Save changes'}

@@ -13,7 +13,7 @@ async function register(req, res) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const { rows } = await pool.query(
-    'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, role',
+    'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, role, color, job_title',
     [name.trim(), email.trim().toLowerCase(), passwordHash]
   );
 
@@ -33,7 +33,7 @@ async function login(req, res) {
 
   res.json({
     token: signToken(user),
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, color: user.color, job_title: user.job_title },
   });
 }
 

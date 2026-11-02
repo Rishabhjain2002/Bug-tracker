@@ -15,7 +15,7 @@ async function authenticate(req, res, next) {
     throw httpError(401, 'Invalid or expired token');
   }
 
-  const { rows } = await pool.query('SELECT id, name, email, role FROM users WHERE id = $1', [payload.id]);
+  const { rows } = await pool.query('SELECT id, name, email, role, color, job_title FROM users WHERE id = $1', [payload.id]);
   if (!rows[0]) throw httpError(401, 'User no longer exists');
 
   req.user = rows[0];

@@ -9,6 +9,8 @@ A full-stack app where teams manage **projects, users and tickets**. Users can c
 | Admin | admin@bugtracker.com | Admin@123 |
 | Member | member@bugtracker.com | Member@123 |
 
+The seed also adds five more team members (Priya, Arjun, Sara, David, Neha — e.g. `priya@bugtracker.com`) with the password `Welcome@123`, three projects, seven labels and 18 sample tickets.
+
 ## Tech stack
 - **Frontend:** React 19 (Vite), React Router, Context API (auth + toasts), Axios, lucide-react icons, plain responsive CSS
 - **Backend:** Node.js, Express 5, PostgreSQL (`pg`), JWT authentication, bcrypt password hashing
@@ -20,7 +22,9 @@ A full-stack app where teams manage **projects, users and tickets**. Users can c
 - **Kanban board** with one column per status (Open / In Progress / Resolved / Closed). Drag a card to another column to change its status; only cards you are allowed to edit can be dragged, and a rejected move is rolled back.
 - Tickets open in a modal over the board (details on the left, status / assignee / priority / project on the right). Without edit permission the ticket is shown read-only.
 - Assign tickets to team members and set priority (**Low / Medium / High**)
-- Search by title or description, filter by project and priority, and click team avatars to filter by assignee
+- **Team page**: admins add team members (name, email, password, job title, role) and give each one a colour, used for their avatar everywhere
+- **Labels** (e.g. Bug, Feature, UI) with their own colours; tickets can have several, shown as coloured chips on the cards
+- Search by title or description, filter by project, priority and label, and click team avatars to filter by assignee
 - Toast notifications for every action, confirm dialogs for deletes, loading skeletons and empty states
 - One-click demo login buttons for the seeded Admin and Member accounts
 - Responsive layout: on tablets the sidebar becomes a top bar, and on phones the board scrolls sideways one column at a time. Drag and drop uses the browser's HTML5 drag-and-drop, which needs a mouse, so on touch screens change the status from the ticket page.
@@ -32,8 +36,8 @@ A full-stack app where teams manage **projects, users and tickets**. Users can c
 | Create a ticket | ✅ | ✅ |
 | Edit a ticket | any | if reporter or assignee |
 | Delete a ticket | any | if reporter |
-| Create / edit / delete projects | ✅ | ❌ |
-| Change user roles / delete users | ✅ | ❌ |
+| Create / edit / delete projects and labels | ✅ | ❌ |
+| Add team members, change roles / colours, delete users | ✅ | ❌ |
 
 ## Project structure
 ```
@@ -42,15 +46,15 @@ server/src/
   db.js / schema.sql  PostgreSQL pool and table definitions
   seed.js             demo data
   middleware/         authenticate (JWT), authorize(role), errorHandler
-  controllers/        auth, user, project, ticket logic
+  controllers/        auth, user, project, label, ticket logic
   routes/             REST route definitions
 client/src/
   api/client.js       Axios instance with token interceptor
   context/            AuthContext (logged-in user), ToastContext (notifications)
   permissions.js      canEditTicket / canDeleteTicket (mirror of the API rules)
   components/         Sidebar, ProtectedRoute, AuthLayout, BoardColumn, TicketCard, TicketModal,
-                      TicketForm, TicketFilters, Modal, ConfirmDialog, Avatar, PriorityIcon
-  pages/              Login, Register, Board, Projects, Users
+                      TicketForm, TicketFilters, Modal, ConfirmDialog, Avatar, PriorityIcon, ColorPicker, LabelChip
+  pages/              Login, Register, Board, Projects, Team, Labels
 ```
 
 ## REST API
@@ -61,22 +65,27 @@ All endpoints except register/login need a JWT. Errors return `{ "message": "...
 | POST | /api/auth/register | public | Create an account (role: member) |
 | POST | /api/auth/login | public | Log in, returns token |
 | GET | /api/auth/me | auth | Current user |
-| GET | /api/users | auth | List users |
+| GET | /api/users | auth | List users (with open_tickets) |
 | GET | /api/users/:id | auth | Get a user |
-| PUT | /api/users/:id | admin | Update name / role |
+| POST | /api/users | admin | Add a team member |
+| PUT | /api/users/:id | admin | Update name / role / color / job_title |
 | DELETE | /api/users/:id | admin | Delete a user |
 | GET | /api/projects | auth | List projects (with ticket_count) |
 | GET | /api/projects/:id | auth | Get a project |
 | POST | /api/projects | admin | Create a project |
 | PUT | /api/projects/:id | admin | Update a project |
 | DELETE | /api/projects/:id | admin | Delete a project and its tickets |
-| GET | /api/tickets | auth | List tickets. Query: `search`, `status`, `priority`, `project_id`, `assignee_id` |
+| GET | /api/labels | auth | List labels (with ticket_count) |
+| POST | /api/labels | admin | Create a label `{ "name", "color" }` |
+| PUT | /api/labels/:id | admin | Update a label |
+| DELETE | /api/labels/:id | admin | Delete a label (tickets keep existing) |
+| GET | /api/tickets | auth | List tickets. Query: `search`, `status`, `priority`, `project_id`, `assignee_id`, `label_id` |
 | GET | /api/tickets/:id | auth | Get a ticket |
 | POST | /api/tickets | auth | Create a ticket |
 | PUT | /api/tickets/:id | admin / reporter / assignee | Update a ticket |
 | DELETE | /api/tickets/:id | admin / reporter | Delete a ticket |
 
-Ticket body: `{ "title", "description", "project_id", "assignee_id", "priority", "status" }`
+Ticket body: `{ "title", "description", "project_id", "assignee_id", "priority", "status", "label_ids" }`. Leave out `label_ids` to keep the current labels. Colours are hex values like `#0c66e4`.
 
 ## Run locally
 Requires Node 20+ and PostgreSQL.
@@ -87,6 +96,7 @@ cd server
 cp .env.example .env      # set DATABASE_URL and JWT_SECRET
 npm install
 npm run seed              # creates tables + demo data (resets existing data)
+# or: npm run seed -- --keep   adds only the missing demo data and keeps yours
 npm run dev               # http://localhost:5000
 
 # Frontend (new terminal)

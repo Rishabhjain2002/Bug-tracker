@@ -3,7 +3,7 @@ import { PRIORITIES } from '../constants';
 import Avatar from './Avatar';
 
 // Status is not a filter here because the board already groups tickets by status
-export default function TicketFilters({ filters, onChange, onClear, projects, users }) {
+export default function TicketFilters({ filters, onChange, onClear, projects, users, labels }) {
   const setFilter = (name, value) => onChange({ ...filters, [name]: value });
   const hasFilters = Object.values(filters).some(Boolean);
 
@@ -30,7 +30,7 @@ export default function TicketFilters({ filters, onChange, onClear, projects, us
               aria-pressed={active}
               onClick={() => setFilter('assignee_id', active ? '' : u.id)}
             >
-              <Avatar id={u.id} name={u.name} />
+              <Avatar id={u.id} name={u.name} color={u.color} />
             </button>
           );
         })}
@@ -44,6 +44,11 @@ export default function TicketFilters({ filters, onChange, onClear, projects, us
       <select value={filters.priority} onChange={(e) => setFilter('priority', e.target.value)}>
         <option value="">All priorities</option>
         {PRIORITIES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+      </select>
+
+      <select value={filters.label_id} onChange={(e) => setFilter('label_id', e.target.value)}>
+        <option value="">All labels</option>
+        {labels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
       </select>
 
       {hasFilters && (

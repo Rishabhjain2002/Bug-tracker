@@ -1041,6 +1041,116 @@ fieldset:disabled textarea {
   min-width: 120px;
 }
 
+.role-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.role-admin { background: var(--primary-soft); color: var(--primary); }
+.role-member { background: var(--column); color: var(--text-subtle); }
+
+.member-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-subtle);
+  border-radius: var(--radius);
+}
+
+/* ---------- Colours and labels ---------- */
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-swatch {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--border);
+  transition: transform 0.15s;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.color-swatch.selected {
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+.label-chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticket-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.label-preview {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background: var(--surface-subtle);
+  border-radius: var(--radius);
+}
+
+.label-preview .label-chip {
+  font-size: 0.875rem;
+  padding: 3px 10px;
+}
+
+.label-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.label-option {
+  display: inline-flex;
+  padding: 1px;
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.label-option:hover {
+  opacity: 0.85;
+}
+
+.label-option.selected {
+  border: 1px solid var(--label-color);
+  opacity: 1;
+}
+
+fieldset:disabled .label-option {
+  cursor: default;
+}
+
 .row-actions {
   text-align: right;
 }
