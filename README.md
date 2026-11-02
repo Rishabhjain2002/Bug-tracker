@@ -6,10 +6,10 @@ A full-stack app where teams manage **projects, users and tickets**. Users can c
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | admin@bugtracker.com | Admin@123 |
-| Member | member@bugtracker.com | Member@123 |
+| Admin | admin@demo.com | admin123 |
+| Member | member@demo.com | member123 |
 
-The seed also adds five more team members (Priya, Arjun, Sara, David, Neha — e.g. `priya@bugtracker.com`) with the password `Welcome@123`, three projects, seven labels and 18 sample tickets.
+The seed also adds five more team members (Priya, Arjun, Sara, David, Neha — e.g. `priya@demo.com`) with the password `demo123`, three projects, seven labels and 18 sample tickets.
 
 ## Tech stack
 - **Frontend:** React 19 (Vite), React Router, Context API (auth + toasts), Axios, lucide-react icons, plain responsive CSS

@@ -46,8 +46,8 @@ const asMember = (req) => req.set('Authorization', `Bearer ${member}`);
 before(async () => {
   await createTestDatabase();
   await seed({ keep: false });
-  admin = await loginAs('admin@bugtracker.com', 'Admin@123');
-  member = await loginAs('member@bugtracker.com', 'Member@123');
+  admin = await loginAs('admin@demo.com', 'admin123');
+  member = await loginAs('member@demo.com', 'member123');
 });
 
 after(() => pool.end());
@@ -72,7 +72,7 @@ describe('auth', () => {
   });
 
   test('wrong password is rejected', async () => {
-    const res = await request(app).post('/api/auth/login').send({ email: 'admin@bugtracker.com', password: 'wrong' });
+    const res = await request(app).post('/api/auth/login').send({ email: 'admin@demo.com', password: 'wrong' });
     assert.equal(res.status, 401);
   });
 
@@ -92,7 +92,7 @@ describe('auth', () => {
 
     const duplicate = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'X', email: 'admin@bugtracker.com', password: 'secret1' });
+      .send({ name: 'X', email: 'admin@demo.com', password: 'secret1' });
     assert.equal(duplicate.status, 409);
   });
 });
@@ -175,14 +175,14 @@ describe('team and labels', () => {
   test('admin adds a team member who can then log in', async () => {
     const res = await asAdmin(request(app).post('/api/users')).send({
       name: 'Rahul Verma',
-      email: 'rahul@bugtracker.com',
+      email: 'rahul@demo.com',
       password: 'secret1',
       color: '#946F00',
       job_title: 'Intern',
     });
     assert.equal(res.status, 201);
     assert.equal(res.body.color, '#946f00');
-    assert.ok(await loginAs('rahul@bugtracker.com', 'secret1'));
+    assert.ok(await loginAs('rahul@demo.com', 'secret1'));
   });
 
   test('colours must be hex values', async () => {

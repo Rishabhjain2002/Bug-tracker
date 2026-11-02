@@ -5,17 +5,17 @@ const bcrypt = require('bcryptjs');
 const { pool, initDb } = require('./db');
 
 // Sample team members log in with this password
-const TEAM_PASSWORD = 'Welcome@123';
+const TEAM_PASSWORD = 'demo123';
 
 const TEAM = [
   // [key, name, email, password, role, color, job title]
-  ['admin', 'Admin User', 'admin@bugtracker.com', 'Admin@123', 'admin', '#0c66e4', 'Engineering Manager'],
-  ['member', 'Member User', 'member@bugtracker.com', 'Member@123', 'member', '#1f845a', 'Frontend Developer'],
-  ['priya', 'Priya Sharma', 'priya@bugtracker.com', TEAM_PASSWORD, 'member', '#6e5dc6', 'Backend Developer'],
-  ['arjun', 'Arjun Mehta', 'arjun@bugtracker.com', TEAM_PASSWORD, 'member', '#d97008', 'QA Engineer'],
-  ['sara', 'Sara Khan', 'sara@bugtracker.com', TEAM_PASSWORD, 'member', '#ae4787', 'UI/UX Designer'],
-  ['david', 'David Chen', 'david@bugtracker.com', TEAM_PASSWORD, 'admin', '#1d7f8c', 'DevOps Engineer'],
-  ['neha', 'Neha Gupta', 'neha@bugtracker.com', TEAM_PASSWORD, 'member', '#c9372c', 'Full-stack Developer'],
+  ['admin', 'Admin User', 'admin@demo.com', 'admin123', 'admin', '#0c66e4', 'Engineering Manager'],
+  ['member', 'Member User', 'member@demo.com', 'member123', 'member', '#1f845a', 'Frontend Developer'],
+  ['priya', 'Priya Sharma', 'priya@demo.com', TEAM_PASSWORD, 'member', '#6e5dc6', 'Backend Developer'],
+  ['arjun', 'Arjun Mehta', 'arjun@demo.com', TEAM_PASSWORD, 'member', '#d97008', 'QA Engineer'],
+  ['sara', 'Sara Khan', 'sara@demo.com', TEAM_PASSWORD, 'member', '#ae4787', 'UI/UX Designer'],
+  ['david', 'David Chen', 'david@demo.com', TEAM_PASSWORD, 'admin', '#1d7f8c', 'DevOps Engineer'],
+  ['neha', 'Neha Gupta', 'neha@demo.com', TEAM_PASSWORD, 'member', '#c9372c', 'Full-stack Developer'],
 ];
 
 const PROJECTS = [

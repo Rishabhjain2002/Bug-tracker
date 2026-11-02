@@ -6,8 +6,8 @@ import AuthLayout from '../components/AuthLayout';
 
 // Accounts created by `npm run seed`, so reviewers can try both roles in one click
 const DEMO_ACCOUNTS = [
-  { label: 'Admin', email: 'admin@bugtracker.com', password: 'Admin@123' },
-  { label: 'Member', email: 'member@bugtracker.com', password: 'Member@123' },
+  { label: 'Admin', email: 'admin@demo.com', password: 'admin123' },
+  { label: 'Member', email: 'member@demo.com', password: 'member123' },
 ];
 
 export default function Login() {
