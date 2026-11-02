@@ -1,26 +1,34 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { ticketKey } from '../utils';
 import Avatar from './Avatar';
+import PriorityIcon from './PriorityIcon';
 
-const PRIORITY_ICONS = { high: '↑', medium: '=', low: '↓' };
+export default function TicketCard({ ticket, draggable, onOpen }) {
+  const [isDragging, setIsDragging] = useState(false);
 
-export default function TicketCard({ ticket, draggable }) {
-  const navigate = useNavigate();
+  const handleDragStart = (e) => {
+    e.dataTransfer.setData('text/plain', ticket.id);
+    e.dataTransfer.effectAllowed = 'move';
+    setIsDragging(true);
+  };
 
   return (
     <div
-      className={`ticket-card${draggable ? ' draggable' : ''}`}
+      className={`ticket-card${draggable ? ' draggable' : ''}${isDragging ? ' dragging' : ''}`}
       draggable={draggable}
-      onDragStart={(e) => e.dataTransfer.setData('text/plain', ticket.id)}
-      onClick={() => navigate(`/tickets/${ticket.id}`)}
+      onDragStart={handleDragStart}
+      onDragEnd={() => setIsDragging(false)}
+      onClick={() => onOpen(ticket)}
+      onKeyDown={(e) => e.key === 'Enter' && onOpen(ticket)}
+      role="button"
+      tabIndex={0}
     >
       <p className="ticket-title">{ticket.title}</p>
       <span className="ticket-project">{ticket.project_name}</span>
       <div className="ticket-meta">
-        <span className="ticket-key">BUG-{ticket.id}</span>
-        <span className={`priority priority-${ticket.priority}`} title={`${ticket.priority} priority`}>
-          {PRIORITY_ICONS[ticket.priority]}
-        </span>
-        <Avatar id={ticket.assignee_id} name={ticket.assignee_name} />
+        <span className="ticket-key">{ticketKey(ticket)}</span>
+        <PriorityIcon priority={ticket.priority} />
+        <Avatar id={ticket.assignee_id} name={ticket.assignee_name} size="sm" />
       </div>
     </div>
   );

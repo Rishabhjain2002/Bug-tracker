@@ -10,3 +10,5 @@ export const PRIORITIES = [
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' },
 ];
+
+export const statusLabel = (value) => STATUSES.find((s) => s.value === value)?.label;

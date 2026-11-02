@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
+import { Bug, FolderKanban, LogOut, SquareKanban, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Avatar from './Avatar';
-import Badge from './Badge';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -10,23 +10,25 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <span className="brand-logo">BT</span>
+        <span className="brand-logo"><Bug size={18} /></span>
         Bug Tracker
       </div>
 
       <nav className="side-nav">
-        <NavLink to="/" end>Board</NavLink>
-        <NavLink to="/projects">Projects</NavLink>
-        {user.role === 'admin' && <NavLink to="/users">Users</NavLink>}
+        <NavLink to="/" end><SquareKanban size={18} /> Board</NavLink>
+        <NavLink to="/projects"><FolderKanban size={18} /> Projects</NavLink>
+        {user.role === 'admin' && <NavLink to="/users"><Users size={18} /> Users</NavLink>}
       </nav>
 
       <div className="side-user">
         <Avatar id={user.id} name={user.name} />
         <div className="side-user-info">
-          <span>{user.name}</span>
-          <Badge value={user.role} />
+          <span className="side-user-name">{user.name}</span>
+          <span className="muted small">{user.role === 'admin' ? 'Admin' : 'Member'}</span>
         </div>
-        <button className="btn btn-secondary" onClick={logout}>Logout</button>
+        <button className="icon-btn" onClick={logout} title="Log out" aria-label="Log out">
+          <LogOut size={18} />
+        </button>
       </div>
     </aside>
   );

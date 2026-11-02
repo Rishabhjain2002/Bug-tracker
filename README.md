@@ -10,7 +10,7 @@ A full-stack app where teams manage **projects, users and tickets**. Users can c
 | Member | member@bugtracker.com | Member@123 |
 
 ## Tech stack
-- **Frontend:** React 19 (Vite), React Router, Context API (auth state), Axios, plain responsive CSS
+- **Frontend:** React 19 (Vite), React Router, Context API (auth + toasts), Axios, lucide-react icons, plain responsive CSS
 - **Backend:** Node.js, Express 5, PostgreSQL (`pg`), JWT authentication, bcrypt password hashing
 - **Hosting:** Vercel (frontend), Railway (API + PostgreSQL)
 
@@ -18,9 +18,11 @@ A full-stack app where teams manage **projects, users and tickets**. Users can c
 - Register / login with JWT; the token is stored in localStorage and sent as `Authorization: Bearer <token>`
 - CRUD for **tickets**, **projects** and **users**
 - **Kanban board** with one column per status (Open / In Progress / Resolved / Closed). Drag a card to another column to change its status; only cards you are allowed to edit can be dragged, and a rejected move is rolled back.
+- Tickets open in a modal over the board (details on the left, status / assignee / priority / project on the right). Without edit permission the ticket is shown read-only.
 - Assign tickets to team members and set priority (**Low / Medium / High**)
-- Search by title or description, and filter by project, priority and assignee
-- One reusable `TicketForm` for creating, editing and viewing tickets (read-only without edit permission)
+- Search by title or description, filter by project and priority, and click team avatars to filter by assignee
+- Toast notifications for every action, confirm dialogs for deletes, loading skeletons and empty states
+- One-click demo login buttons for the seeded Admin and Member accounts
 - Responsive layout: on tablets the sidebar becomes a top bar, and on phones the board scrolls sideways one column at a time. Drag and drop uses the browser's HTML5 drag-and-drop, which needs a mouse, so on touch screens change the status from the ticket page.
 - **Role-based access control**
 
@@ -44,11 +46,11 @@ server/src/
   routes/             REST route definitions
 client/src/
   api/client.js       Axios instance with token interceptor
-  context/            AuthContext (Context API)
+  context/            AuthContext (logged-in user), ToastContext (notifications)
   permissions.js      canEditTicket / canDeleteTicket (mirror of the API rules)
-  components/         Sidebar, ProtectedRoute, BoardColumn, TicketCard, TicketForm,
-                      TicketFilters, Avatar, Badge
-  pages/              Login, Register, Board, TicketFormPage, Projects, Users
+  components/         Sidebar, ProtectedRoute, AuthLayout, BoardColumn, TicketCard, TicketModal,
+                      TicketForm, TicketFilters, Modal, ConfirmDialog, Avatar, PriorityIcon
+  pages/              Login, Register, Board, Projects, Users
 ```
 
 ## REST API
@@ -63,7 +65,7 @@ All endpoints except register/login need a JWT. Errors return `{ "message": "...
 | GET | /api/users/:id | auth | Get a user |
 | PUT | /api/users/:id | admin | Update name / role |
 | DELETE | /api/users/:id | admin | Delete a user |
-| GET | /api/projects | auth | List projects |
+| GET | /api/projects | auth | List projects (with ticket_count) |
 | GET | /api/projects/:id | auth | Get a project |
 | POST | /api/projects | admin | Create a project |
 | PUT | /api/projects/:id | admin | Update a project |

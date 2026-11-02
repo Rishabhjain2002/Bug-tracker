@@ -1,9 +1,15 @@
 const { pool } = require('../db');
 const httpError = require('../utils/httpError');
 
-// GET /api/projects
+// GET /api/projects - each project includes how many tickets it has
 async function listProjects(req, res) {
-  const { rows } = await pool.query('SELECT * FROM projects ORDER BY created_at DESC');
+  const { rows } = await pool.query(
+    `SELECT p.*, COUNT(t.id)::int AS ticket_count
+     FROM projects p
+     LEFT JOIN tickets t ON t.project_id = p.id
+     GROUP BY p.id
+     ORDER BY p.created_at DESC`
+  );
   res.json(rows);
 }
 

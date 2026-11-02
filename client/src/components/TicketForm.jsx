@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { getErrorMessage } from '../api/client';
 import { PRIORITIES, STATUSES } from '../constants';
 
-// Shared by the create and edit ticket pages; readOnly shows the ticket without editing
-export default function TicketForm({ initialValues, projects, users, onSubmit, submitLabel, readOnly = false }) {
+// Used for creating, editing and (readOnly) viewing a ticket
+export default function TicketForm({ initialValues, projects, users, onSubmit, onCancel, submitLabel, readOnly = false }) {
   const [form, setForm] = useState(initialValues);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -23,31 +23,46 @@ export default function TicketForm({ initialValues, projects, users, onSubmit, s
   };
 
   return (
-    <form className="card form" onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       {error && <p className="error">{error}</p>}
 
       {/* A disabled fieldset disables every input inside it */}
-      <fieldset className="form" disabled={readOnly}>
-        <label>
-          Title
-          <input name="title" value={form.title} onChange={handleChange} required maxLength={200} />
-        </label>
+      <fieldset className="ticket-form" disabled={readOnly}>
+        <div className="ticket-form-main">
+          <label className="field">
+            Title
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder="What needs to be fixed?"
+              required
+              maxLength={200}
+              autoFocus={!readOnly}
+            />
+          </label>
 
-        <label>
-          Description
-          <textarea name="description" rows={4} value={form.description} onChange={handleChange} />
-        </label>
+          <label className="field">
+            Description
+            <textarea
+              name="description"
+              rows={8}
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Steps to reproduce, expected and actual behaviour..."
+            />
+          </label>
+        </div>
 
-        <div className="form-grid">
-          <label>
-            Project
-            <select name="project_id" value={form.project_id} onChange={handleChange} required>
-              <option value="">Select project</option>
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <div className="ticket-form-side">
+          <label className="field">
+            Status
+            <select name="status" value={form.status} onChange={handleChange}>
+              {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </label>
 
-          <label>
+          <label className="field">
             Assignee
             <select name="assignee_id" value={form.assignee_id} onChange={handleChange}>
               <option value="">Unassigned</option>
@@ -55,27 +70,33 @@ export default function TicketForm({ initialValues, projects, users, onSubmit, s
             </select>
           </label>
 
-          <label>
+          <label className="field">
             Priority
             <select name="priority" value={form.priority} onChange={handleChange}>
               {PRIORITIES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
           </label>
 
-          <label>
-            Status
-            <select name="status" value={form.status} onChange={handleChange}>
-              {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          <label className="field">
+            Project
+            <select name="project_id" value={form.project_id} onChange={handleChange} required>
+              <option value="">Select project</option>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </label>
         </div>
       </fieldset>
 
-      {!readOnly && (
-        <button className="btn" type="submit" disabled={saving}>
-          {saving ? 'Saving...' : submitLabel}
+      <div className="modal-footer">
+        <button className="btn btn-secondary" type="button" onClick={onCancel}>
+          {readOnly ? 'Close' : 'Cancel'}
         </button>
-      )}
+        {!readOnly && (
+          <button className="btn" type="submit" disabled={saving}>
+            {saving ? 'Saving...' : submitLabel}
+          </button>
+        )}
+      </div>
     </form>
   );
 }
