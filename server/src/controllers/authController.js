@@ -23,7 +23,10 @@ async function register(req, res) {
 // POST /api/auth/login
 async function login(req, res) {
   const { email, password } = req.body;
-  if (!email || !password) throw httpError(400, 'Email and password are required');
+  // A non-string value would make trim() or bcrypt.compare() throw and return a 500
+  if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
+    throw httpError(400, 'Email and password are required');
+  }
 
   const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email.trim().toLowerCase()]);
   const user = rows[0];

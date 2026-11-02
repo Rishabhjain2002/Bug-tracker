@@ -76,6 +76,13 @@ describe('auth', () => {
     assert.equal(res.status, 401);
   });
 
+  test('non-string login fields are a 400, not a server error', async () => {
+    const badEmail = await request(app).post('/api/auth/login').send({ email: 123, password: 'admin123' });
+    assert.equal(badEmail.status, 400);
+    const badPassword = await request(app).post('/api/auth/login').send({ email: 'admin@demo.com', password: 123 });
+    assert.equal(badPassword.status, 400);
+  });
+
   test('register creates a member and returns a token', async () => {
     const res = await request(app)
       .post('/api/auth/register')
@@ -94,6 +101,7 @@ describe('auth', () => {
       .post('/api/auth/register')
       .send({ name: 'X', email: 'admin@demo.com', password: 'secret1' });
     assert.equal(duplicate.status, 409);
+    assert.equal(duplicate.body.message, 'Email is already registered');
   });
 });
 
