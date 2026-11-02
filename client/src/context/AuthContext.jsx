@@ -5,14 +5,12 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Only wait for /auth/me when there is a saved token to check
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem('token')));
 
   // Restore the logged-in user from the saved token on page load
   useEffect(() => {
-    if (!localStorage.getItem('token')) {
-      setLoading(false);
-      return;
-    }
+    if (!localStorage.getItem('token')) return;
     api
       .get('/auth/me')
       .then((res) => setUser(res.data))

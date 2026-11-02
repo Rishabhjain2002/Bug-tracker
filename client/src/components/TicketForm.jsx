@@ -1,34 +1,24 @@
-import { useState } from 'react';
-import { getErrorMessage } from '../api/client';
 import { PRIORITIES, STATUSES } from '../constants';
+import useForm from '../hooks/useForm';
+import useSubmit from '../hooks/useSubmit';
 import LabelChip from './LabelChip';
 
 // Used for creating, editing and (readOnly) viewing a ticket
 export default function TicketForm({ initialValues, projects, users, labels, onSubmit, onCancel, submitLabel, readOnly = false }) {
-  const [form, setForm] = useState(initialValues);
-  const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const { values: form, handleChange, setValue } = useForm(initialValues);
+  const { submit, error, submitting } = useSubmit(onSubmit);
 
   const toggleLabel = (id) => {
     const labelIds = form.label_ids.includes(id) ? form.label_ids.filter((l) => l !== id) : [...form.label_ids, id];
-    setForm({ ...form, label_ids: labelIds });
+    setValue('label_ids', labelIds);
   };
 
   // When viewing read-only, show only the ticket's own labels
   const visibleLabels = readOnly ? labels.filter((l) => form.label_ids.includes(l.id)) : labels;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-    setSaving(true);
-    try {
-      await onSubmit({ ...form, assignee_id: form.assignee_id || null });
-    } catch (err) {
-      setError(getErrorMessage(err));
-      setSaving(false);
-    }
+    submit({ ...form, assignee_id: form.assignee_id || null });
   };
 
   return (
@@ -131,8 +121,8 @@ export default function TicketForm({ initialValues, projects, users, labels, onS
           {readOnly ? 'Close' : 'Cancel'}
         </button>
         {!readOnly && (
-          <button className="btn" type="submit" disabled={saving}>
-            {saving ? 'Saving...' : submitLabel}
+          <button className="btn" type="submit" disabled={submitting}>
+            {submitting ? 'Saving...' : submitLabel}
           </button>
         )}
       </div>

@@ -4,10 +4,12 @@ import api, { getErrorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { STATUSES, statusLabel } from '../constants';
+import useFetch from '../hooks/useFetch';
 import { canEditTicket } from '../permissions';
 import { ticketKey } from '../utils';
-import TicketFilters from '../components/TicketFilters';
 import BoardColumn from '../components/BoardColumn';
+import PageHeader from '../components/PageHeader';
+import TicketFilters from '../components/TicketFilters';
 import TicketModal from '../components/TicketModal';
 
 const EMPTY_FILTERS = { search: '', project_id: '', priority: '', assignee_id: '', label_id: '' };
@@ -16,24 +18,14 @@ export default function Board() {
   const { user } = useAuth();
   const showToast = useToast();
   const [tickets, setTickets] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [labels, setLabels] = useState([]);
+  // Options for the filters and the ticket form
+  const { data: projects } = useFetch('/projects');
+  const { data: users } = useFetch('/users');
+  const { data: labels } = useFetch('/labels');
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [loading, setLoading] = useState(true);
   // null = closed, { ticket } = open a ticket, { status } = create a ticket in that column
   const [modal, setModal] = useState(null);
-
-  // Options for the filters and the ticket form
-  useEffect(() => {
-    Promise.all([api.get('/projects'), api.get('/users'), api.get('/labels')])
-      .then(([projectsRes, usersRes, labelsRes]) => {
-        setProjects(projectsRes.data);
-        setUsers(usersRes.data);
-        setLabels(labelsRes.data);
-      })
-      .catch((err) => showToast(getErrorMessage(err), 'error'));
-  }, [showToast]);
 
   // Refetch tickets when filters change; the delay avoids a request on every keystroke
   useEffect(() => {
@@ -82,15 +74,15 @@ export default function Board() {
 
   return (
     <section>
-      <div className="page-header">
-        <div>
-          <p className="breadcrumb">Projects / {selectedProject?.name || 'All projects'}</p>
-          <h1>Board</h1>
-        </div>
-        <button className="btn" onClick={() => setModal({ status: 'open' })}>
-          <Plus size={16} /> Create
-        </button>
-      </div>
+      <PageHeader
+        title="Board"
+        breadcrumb={`Projects / ${selectedProject?.name || 'All projects'}`}
+        action={
+          <button className="btn" onClick={() => setModal({ status: 'open' })}>
+            <Plus size={16} /> Create
+          </button>
+        }
+      />
 
       <TicketFilters
         filters={filters}

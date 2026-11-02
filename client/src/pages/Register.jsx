@@ -1,31 +1,23 @@
-import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getErrorMessage } from '../api/client';
+import useForm from '../hooks/useForm';
+import useSubmit from '../hooks/useSubmit';
 import AuthLayout from '../components/AuthLayout';
 
 export default function Register() {
   const { user, register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { values, handleChange } = useForm({ name: '', email: '', password: '' });
+  const { submit, error, submitting } = useSubmit(async () => {
+    await register(values.name, values.email, values.password);
+    navigate('/');
+  });
 
   if (user) return <Navigate to="/" replace />;
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-    setSubmitting(true);
-    try {
-      await register(form.name, form.email, form.password);
-      navigate('/');
-    } catch (err) {
-      setError(getErrorMessage(err));
-      setSubmitting(false);
-    }
+    submit();
   };
 
   return (
@@ -34,18 +26,18 @@ export default function Register() {
         {error && <p className="error">{error}</p>}
         <label className="field">
           Full name
-          <input name="name" value={form.name} onChange={handleChange} placeholder="Jane Doe" required />
+          <input name="name" value={values.name} onChange={handleChange} placeholder="Jane Doe" required />
         </label>
         <label className="field">
           Email
-          <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@company.com" required />
+          <input type="email" name="email" value={values.email} onChange={handleChange} placeholder="you@company.com" required />
         </label>
         <label className="field">
           Password
           <input
             type="password"
             name="password"
-            value={form.password}
+            value={values.password}
             onChange={handleChange}
             placeholder="At least 6 characters"
             minLength={6}

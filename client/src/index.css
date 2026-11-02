@@ -1233,17 +1233,21 @@ fieldset:disabled .label-option {
     width: 100%;
   }
 
+  /* Four tabs fit on a phone with the icon above the text */
   .side-nav a {
     flex: 1;
-    justify-content: center;
-    padding: 8px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 4px;
+    font-size: 0.75rem;
   }
 
-  .search-box {
+  .search-box,
+  .avatar-filter {
     width: 100%;
   }
 
-  /* Project and priority dropdowns share one row */
+  /* Project, priority and label dropdowns share one row */
   .filters select {
     flex: 1;
     min-width: 0;
