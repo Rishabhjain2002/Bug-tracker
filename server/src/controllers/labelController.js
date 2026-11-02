@@ -1,13 +1,11 @@
 const { pool } = require('../db');
 const httpError = require('../utils/httpError');
-const parseColor = require('../utils/color');
+const { requireText, optionalColor } = require('../utils/validate');
 
 // Validates the request body and returns [name, color]
-function parseLabelBody(body) {
-  const { name, color } = body;
-  if (!name?.trim()) throw httpError(400, 'Label name is required');
+function parseLabelBody({ name, color }) {
   if (!color) throw httpError(400, 'Label color is required');
-  return [name.trim(), parseColor(color)];
+  return [requireText(name, 'Label name', 50), optionalColor(color)];
 }
 
 // GET /api/labels - each label includes how many tickets use it

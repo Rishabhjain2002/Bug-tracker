@@ -56,7 +56,6 @@ const TICKETS = [
   ['Upgrade Node to 22 LTS', 'Node 18 is end of life. Update the Dockerfile and CI images.', 'closed', 'medium', 'payments', 'david', 'david', ['backend']],
 ];
 
-const keep = process.argv.includes('--keep');
 
 // Runs `find`; if it returns no row, runs `insert`. Returns the row's id
 async function findOrInsert(find, insert) {
@@ -71,7 +70,7 @@ async function insertAll(items, insert) {
   return ids;
 }
 
-async function seed() {
+async function seed({ keep = process.argv.includes('--keep') } = {}) {
   await initDb();
   if (!keep) await pool.query('TRUNCATE ticket_labels, labels, tickets, projects, users RESTART IDENTITY CASCADE');
 
@@ -121,9 +120,14 @@ async function seed() {
   console.log(`Database ${keep ? 'topped up' : 'seeded'}: ${TEAM.length} users, ${PROJECTS.length} projects, ${LABELS.length} labels, ${TICKETS.length} tickets`);
 }
 
-seed()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = { seed };
+
+// Run directly (npm run seed), not when imported by the tests
+if (require.main === module) {
+  seed()
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

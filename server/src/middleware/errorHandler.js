@@ -3,6 +3,7 @@ const PG_ERRORS = {
   23505: { status: 409, message: 'Email is already registered' }, // unique_violation
   23503: { status: 400, message: 'Referenced project, user or label does not exist' }, // foreign_key_violation
   '22P02': { status: 400, message: 'Invalid id or value format' }, // invalid_text_representation
+  22001: { status: 400, message: 'A value is longer than allowed' }, // string_data_right_truncation
 };
 
 // unique_violation messages for constraints other than the user email

@@ -8,6 +8,8 @@ router.use(authenticate);
 router.get('/', listUsers);
 router.get('/:id', getUser);
 router.post('/', authorize('admin'), createUser);
+// PATCH because only the fields sent are changed; PUT is kept for older clients
+router.patch('/:id', authorize('admin'), updateUser);
 router.put('/:id', authorize('admin'), updateUser);
 router.delete('/:id', authorize('admin'), deleteUser);
 

@@ -2,19 +2,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
 const httpError = require('../utils/httpError');
+const { requireText, requireEmail, requirePassword } = require('../utils/validate');
 
 const signToken = (user) => jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
 // POST /api/auth/register
 async function register(req, res) {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) throw httpError(400, 'Name, email and password are required');
-  if (password.length < 6) throw httpError(400, 'Password must be at least 6 characters');
+  const name = requireText(req.body.name, 'Name', 100);
+  const email = requireEmail(req.body.email);
+  const passwordHash = await bcrypt.hash(requirePassword(req.body.password), 10);
 
-  const passwordHash = await bcrypt.hash(password, 10);
   const { rows } = await pool.query(
     'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, role, color, job_title',
-    [name.trim(), email.trim().toLowerCase(), passwordHash]
+    [name, email, passwordHash]
   );
 
   res.status(201).json({ token: signToken(rows[0]), user: rows[0] });

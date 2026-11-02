@@ -1,5 +1,12 @@
 const { pool } = require('../db');
 const httpError = require('../utils/httpError');
+const { requireText, optionalText } = require('../utils/validate');
+
+// Validates the request body and returns [name, description]
+const parseProjectBody = ({ name, description }) => [
+  requireText(name, 'Project name', 150),
+  optionalText(description, 'Description'),
+];
 
 // GET /api/projects - each project includes how many tickets it has
 async function listProjects(req, res) {
@@ -22,24 +29,18 @@ async function getProject(req, res) {
 
 // POST /api/projects (admin)
 async function createProject(req, res) {
-  const { name, description } = req.body;
-  if (!name?.trim()) throw httpError(400, 'Project name is required');
-
   const { rows } = await pool.query(
     'INSERT INTO projects (name, description, created_by) VALUES ($1, $2, $3) RETURNING *',
-    [name.trim(), description || null, req.user.id]
+    [...parseProjectBody(req.body), req.user.id]
   );
   res.status(201).json(rows[0]);
 }
 
 // PUT /api/projects/:id (admin)
 async function updateProject(req, res) {
-  const { name, description } = req.body;
-  if (!name?.trim()) throw httpError(400, 'Project name is required');
-
   const { rows } = await pool.query(
     'UPDATE projects SET name = $1, description = $2 WHERE id = $3 RETURNING *',
-    [name.trim(), description || null, req.params.id]
+    [...parseProjectBody(req.body), req.params.id]
   );
   if (!rows[0]) throw httpError(404, 'Project not found');
   res.json(rows[0]);

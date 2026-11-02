@@ -13,4 +13,20 @@ async function initDb() {
   await pool.query(schema);
 }
 
-module.exports = { pool, initDb };
+// Runs fn(client) inside a transaction: commits if it succeeds, rolls back if it throws
+async function inTransaction(fn) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { pool, initDb, inTransaction };

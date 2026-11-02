@@ -1,5 +1,6 @@
-const { pool } = require('../db');
+const { pool, inTransaction } = require('../db');
 const httpError = require('../utils/httpError');
+const { requireText, optionalText, requireOneOf } = require('../utils/validate');
 
 const STATUSES = ['open', 'in_progress', 'resolved', 'closed'];
 const PRIORITIES = ['low', 'medium', 'high'];
@@ -27,13 +28,16 @@ async function findTicket(id) {
 // Validates the request body and returns the values to save
 function parseTicketBody(body) {
   const { title, description, status = 'open', priority = 'medium', project_id, assignee_id } = body;
-
-  if (!title?.trim()) throw httpError(400, 'Title is required');
   if (!project_id) throw httpError(400, 'Project is required');
-  if (!STATUSES.includes(status)) throw httpError(400, `Status must be one of: ${STATUSES.join(', ')}`);
-  if (!PRIORITIES.includes(priority)) throw httpError(400, `Priority must be one of: ${PRIORITIES.join(', ')}`);
 
-  return [title.trim(), description || null, status, priority, project_id, assignee_id || null];
+  return [
+    requireText(title, 'Title', 200),
+    optionalText(description, 'Description'),
+    requireOneOf(status, 'Status', STATUSES),
+    requireOneOf(priority, 'Priority', PRIORITIES),
+    project_id,
+    assignee_id || null,
+  ];
 }
 
 // Returns the label ids to save, or null when the body has none (the labels are left unchanged)
@@ -51,22 +55,6 @@ async function saveLabels(client, ticketId, labelIds) {
     'INSERT INTO ticket_labels (ticket_id, label_id) SELECT $1, unnest($2::int[])',
     [ticketId, labelIds]
   );
-}
-
-// Runs fn(client) in a transaction, so a bad label id does not leave a half-saved ticket
-async function inTransaction(fn) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await fn(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    client.release();
-  }
 }
 
 const isAdmin = (user) => user.role === 'admin';
@@ -110,6 +98,7 @@ async function createTicket(req, res) {
   const values = parseTicketBody(req.body);
   const labelIds = parseLabelIds(req.body);
 
+  // One transaction, so a bad label id does not leave a half-saved ticket
   const ticketId = await inTransaction(async (client) => {
     const { rows } = await client.query(
       `INSERT INTO tickets (title, description, status, priority, project_id, assignee_id, reporter_id)

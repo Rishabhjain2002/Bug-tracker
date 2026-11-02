@@ -41,19 +41,25 @@ The seed also adds five more team members (Priya, Arjun, Sara, David, Neha — e
 
 ## Project structure
 ```
-server/src/
-  index.js            Express app, routes, error handling
-  db.js / schema.sql  PostgreSQL pool and table definitions
-  seed.js             demo data
-  middleware/         authenticate (JWT), authorize(role), errorHandler
-  controllers/        auth, user, project, label, ticket logic
-  routes/             REST route definitions
+server/
+  src/app.js          Express app: middleware, routes, error handling (exported for tests)
+  src/index.js        creates the tables, then starts the server
+  src/db.js           PostgreSQL pool, initDb, inTransaction helper
+  src/schema.sql      table definitions
+  src/seed.js         demo data
+  src/middleware/     authenticate (JWT), authorize(role), errorHandler
+  src/controllers/    auth, user, project, label, ticket logic
+  src/routes/         REST route definitions
+  src/utils/          validate (shared request validators), httpError
+  test/api.test.js    API tests (node:test + supertest)
 client/src/
   api/client.js       Axios instance with token interceptor
   context/            AuthContext (logged-in user), ToastContext (notifications)
+  hooks/              useFetch (load + error toast), useForm (form values), useSubmit (submitting + error)
   permissions.js      canEditTicket / canDeleteTicket (mirror of the API rules)
-  components/         Sidebar, ProtectedRoute, AuthLayout, BoardColumn, TicketCard, TicketModal,
-                      TicketForm, TicketFilters, Modal, ConfirmDialog, Avatar, PriorityIcon, ColorPicker, LabelChip
+  components/         reusable UI: Modal, FormModal, ConfirmDialog, PageHeader, EmptyState, Avatar,
+                      ColorPicker, LabelChip, PriorityIcon; board: BoardColumn, TicketCard, TicketModal,
+                      TicketForm, TicketFilters; forms: ProjectModal, MemberModal, LabelModal
   pages/              Login, Register, Board, Projects, Team, Labels
 ```
 
@@ -65,10 +71,11 @@ All endpoints except register/login need a JWT. Errors return `{ "message": "...
 | POST | /api/auth/register | public | Create an account (role: member) |
 | POST | /api/auth/login | public | Log in, returns token |
 | GET | /api/auth/me | auth | Current user |
+| GET | /api/health | public | Health check, returns `{ "status": "ok" }` |
 | GET | /api/users | auth | List users (with open_tickets) |
 | GET | /api/users/:id | auth | Get a user |
 | POST | /api/users | admin | Add a team member |
-| PUT | /api/users/:id | admin | Update name / role / color / job_title |
+| PATCH | /api/users/:id | admin | Partial update of name / role / color / job_title |
 | DELETE | /api/users/:id | admin | Delete a user |
 | GET | /api/projects | auth | List projects (with ticket_count) |
 | GET | /api/projects/:id | auth | Get a project |
@@ -87,6 +94,8 @@ All endpoints except register/login need a JWT. Errors return `{ "message": "...
 
 Ticket body: `{ "title", "description", "project_id", "assignee_id", "priority", "status", "label_ids" }`. Leave out `label_ids` to keep the current labels. Colours are hex values like `#0c66e4`.
 
+`PUT` replaces the whole resource (tickets and projects send every field), while `PATCH` changes only the fields sent (users: e.g. just the role). Request bodies are validated in `utils/validate.js`, so missing fields, values that are too long, invalid emails and bad colours return 400 with a readable message. A ticket and its labels are saved in one transaction.
+
 ## Run locally
 Requires Node 20+ and PostgreSQL.
 
@@ -104,6 +113,12 @@ cd client
 cp .env.example .env
 npm install
 npm run dev               # http://localhost:5173
+```
+
+## Tests and linting
+```bash
+cd server && npm test     # 17 API tests; they create and reset a separate <db>_test database
+cd client && npm run lint # ESLint with the React hooks rules
 ```
 
 ## Deployment
