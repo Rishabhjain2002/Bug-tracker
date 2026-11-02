@@ -2,7 +2,7 @@
 
 A full-stack app where teams manage **projects, users and tickets**. Users can create, assign, prioritise, search and filter tickets.
 
-**Live demo:** Frontend `<VERCEL_URL>` · API `<RAILWAY_URL>/api`
+**Live demo:** https://rishabh-bug-tracker.vercel.app · API https://api-production-3769e.up.railway.app/api (health check: [/api/health](https://api-production-3769e.up.railway.app/api/health))
 
 | Role | Email | Password |
 |---|---|---|
@@ -123,4 +123,4 @@ cd client && npm run lint # ESLint with the React hooks rules
 
 ## Deployment
 - **Railway:** add a PostgreSQL database and a service from this repo with root directory `server`. Set the variables `DATABASE_URL` (reference to the Postgres `DATABASE_URL`), `JWT_SECRET` and `CLIENT_URL` (the Vercel URL). Tables are created automatically on startup. To load the demo data, run `npm run seed` once with `DATABASE_URL` set to the database's public URL.
-- **Vercel:** import the repo with root directory `client` and set `VITE_API_URL` to `<RAILWAY_URL>/api`.
+- **Vercel:** import the repo with root directory `client` and set `VITE_API_URL` to the Railway API URL followed by `/api`.
