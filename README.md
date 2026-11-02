@@ -17,10 +17,11 @@ A full-stack app where teams manage **projects, users and tickets**. Users can c
 ## Features
 - Register / login with JWT; the token is stored in localStorage and sent as `Authorization: Bearer <token>`
 - CRUD for **tickets**, **projects** and **users**
-- Assign tickets to team members and set priority (**Low / Medium / High**) and status (Open / In Progress / Resolved / Closed)
-- Search by title or description, and filter by project, status, priority and assignee
-- One reusable `TicketForm` for both creating and editing tickets
-- Responsive layout; tables turn into cards on mobile
+- **Kanban board** with one column per status (Open / In Progress / Resolved / Closed). Drag a card to another column to change its status; only cards you are allowed to edit can be dragged, and a rejected move is rolled back.
+- Assign tickets to team members and set priority (**Low / Medium / High**)
+- Search by title or description, and filter by project, priority and assignee
+- One reusable `TicketForm` for creating, editing and viewing tickets (read-only without edit permission)
+- Responsive layout: on tablets the sidebar becomes a top bar, and on phones the board scrolls sideways one column at a time. Drag and drop uses the browser's HTML5 drag-and-drop, which needs a mouse, so on touch screens change the status from the ticket page.
 - **Role-based access control**
 
 | Action | Admin | Member |
@@ -44,8 +45,10 @@ server/src/
 client/src/
   api/client.js       Axios instance with token interceptor
   context/            AuthContext (Context API)
-  components/         Navbar, ProtectedRoute, TicketForm, TicketFilters, Badge
-  pages/              Login, Register, Tickets, TicketFormPage, Projects, Users
+  permissions.js      canEditTicket / canDeleteTicket (mirror of the API rules)
+  components/         Sidebar, ProtectedRoute, BoardColumn, TicketCard, TicketForm,
+                      TicketFilters, Avatar, Badge
+  pages/              Login, Register, Board, TicketFormPage, Projects, Users
 ```
 
 ## REST API

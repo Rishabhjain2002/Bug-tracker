@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import { canDeleteTicket, canEditTicket } from '../permissions';
 import TicketForm from '../components/TicketForm';
 
 const EMPTY_TICKET = {
@@ -22,13 +24,15 @@ const toFormValues = (ticket) => ({
   status: ticket.status,
 });
 
-// Handles both /tickets/new and /tickets/:id/edit
+// Handles both /tickets/new and /tickets/:id (edit, or read-only view without permission)
 export default function TicketFormPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
-  const [initialValues, setInitialValues] = useState(null);
+  const [ticket, setTicket] = useState(null);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -39,10 +43,13 @@ export default function TicketFormPage() {
       .then(([projectsRes, usersRes, ticketRes]) => {
         setProjects(projectsRes.data);
         setUsers(usersRes.data);
-        setInitialValues(ticketRes ? toFormValues(ticketRes.data) : EMPTY_TICKET);
+        if (ticketRes) setTicket(ticketRes.data);
+        setLoaded(true);
       })
       .catch((err) => setError(getErrorMessage(err)));
   }, [id]);
+
+  const canEdit = !ticket || canEditTicket(user, ticket);
 
   const handleSubmit = async (values) => {
     if (id) await api.put(`/tickets/${id}`, values);
@@ -50,17 +57,42 @@ export default function TicketFormPage() {
     navigate('/');
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete ticket "${ticket.title}"?`)) return;
+    try {
+      await api.delete(`/tickets/${id}`);
+      navigate('/');
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  };
+
   return (
     <section className="narrow">
-      <h1>{id ? 'Edit Ticket' : 'New Ticket'}</h1>
+      <Link className="muted" to="/">← Back to board</Link>
+      <div className="page-header">
+        <h1>{ticket ? `BUG-${ticket.id}` : 'Create Ticket'}</h1>
+        {ticket && canDeleteTicket(user, ticket) && (
+          <button className="btn btn-danger" onClick={handleDelete}>Delete</button>
+        )}
+      </div>
+
+      {ticket && (
+        <p className="muted small">
+          Reported by {ticket.reporter_name || 'deleted user'}
+          {!canEdit && ' · Only an admin, the reporter or the assignee can edit this ticket'}
+        </p>
+      )}
       {error && <p className="error">{error}</p>}
-      {initialValues && (
+
+      {loaded && (
         <TicketForm
-          initialValues={initialValues}
+          initialValues={ticket ? toFormValues(ticket) : EMPTY_TICKET}
           projects={projects}
           users={users}
           onSubmit={handleSubmit}
           submitLabel={id ? 'Save changes' : 'Create ticket'}
+          readOnly={!canEdit}
         />
       )}
     </section>
